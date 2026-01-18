@@ -15,7 +15,7 @@ from typing import Optional
 from app.analysis.experience_analyzer import calculate_experience_score
 from app.analysis.project_analyzer import calculate_project_relevance_score
 from app.analysis.ats_checker import calculate_ats_format_score
-
+from app.analysis.final_scorer import calculate_final_ats_score
 
 # ✅ ONE app only
 app = FastAPI(title="AI Resume Analyzer Backend")
@@ -279,4 +279,70 @@ async def analyze_ats_format(resume_file: UploadFile = File(...)):
 
     return {
         "ats_format_analysis": ats_result
+    }
+
+
+# -----------------------------
+# Final ATS Analysis API
+# -----------------------------
+@app.post("/analyze-full")
+async def analyze_full_resume(
+    resume_file: UploadFile = File(...),
+    jd_file: UploadFile = File(...),
+):
+    resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+    jd_path = os.path.join(UPLOAD_DIR, jd_file.filename)
+
+    with open(resume_path, "wb") as f:
+        f.write(await resume_file.read())
+
+    with open(jd_path, "wb") as f:
+        f.write(await jd_file.read())
+
+    resume_text = parse_resume(resume_path)
+    jd_text = parse_jd(jd_path)
+
+    # Skill score (existing engine)
+    resume_skills = extract_skills(resume_text)
+    jd_skills = extract_skills(jd_text)
+
+    matched = list(set(resume_skills) & set(jd_skills))
+    skill_score = calculate_ats_score(
+        matched,
+        jd_skills,
+        []
+    )
+
+    # Experience score
+    experience_result = calculate_experience_score(resume_text, jd_text)
+    experience_score = experience_result["experience_score"]
+
+    # Project score
+    project_result = calculate_project_relevance_score(
+        resume_text,
+        jd_skills,
+        resume_skills,
+    )
+    project_score = project_result["project_score"]
+
+    # ATS format score
+    ats_format_result = calculate_ats_format_score(resume_text)
+    ats_format_score = ats_format_result["ats_format_score"]
+
+    # Role score (temporary static — dynamic in Day-5)
+    role_score = 80
+
+    final_result = calculate_final_ats_score(
+        skill_score=skill_score,
+        experience_score=experience_score,
+        project_score=project_score,
+        ats_format_score=ats_format_score,
+        role_score=role_score,
+    )
+
+    return {
+        "final_ats_result": final_result,
+        "experience_analysis": experience_result,
+        "project_analysis": project_result,
+        "ats_format_analysis": ats_format_result,
     }
