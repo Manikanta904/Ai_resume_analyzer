@@ -14,6 +14,7 @@ from app.matching.explainability import explain_score
 from typing import Optional
 from app.analysis.experience_analyzer import calculate_experience_score
 from app.analysis.project_analyzer import calculate_project_relevance_score
+from app.analysis.ats_checker import calculate_ats_format_score
 
 
 # ✅ ONE app only
@@ -260,4 +261,22 @@ async def analyze_projects(
 
     return {
         "project_analysis": project_result
+    }
+
+# -----------------------------
+# ATS Format Compatibility API
+# -----------------------------
+@app.post("/analyze-ats-format")
+async def analyze_ats_format(resume_file: UploadFile = File(...)):
+    resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+
+    with open(resume_path, "wb") as f:
+        f.write(await resume_file.read())
+
+    resume_text = parse_resume(resume_path)
+
+    ats_result = calculate_ats_format_score(resume_text)
+
+    return {
+        "ats_format_analysis": ats_result
     }
