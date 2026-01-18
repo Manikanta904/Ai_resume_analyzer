@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 import os
 import shutil
-
+from fastapi import UploadFile, File, Body
 from app.parsing.resume_parser import parse_resume
 from app.parsing.jd_parser import parse_jd
 from app.skills.skill_extractor import extract_skills
@@ -10,8 +10,10 @@ from app.matching.jd_skill_classifier import classify_jd_skills
 from app.matching.skill_matcher import match_skills
 from app.matching.weighted_scorer import calculate_ats_score
 from app.matching.explainability import explain_score
-from fastapi import UploadFile, File, Body
+
 from typing import Optional
+from app.analysis.experience_analyzer import calculate_experience_score
+from app.analysis.project_analyzer import calculate_project_relevance_score
 
 
 # ✅ ONE app only
@@ -200,4 +202,62 @@ async def analyze(
             "semantic_matches_count": len(semantic_matches)
         }
     }
+# -----------------------------
+# Experience Analysis API
+# -----------------------------
+@app.post("/analyze-experience")
+async def analyze_experience(
+    resume_file: UploadFile = File(...),
+    jd_file: UploadFile = File(...)
+):
+    resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+    jd_path = os.path.join(UPLOAD_DIR, jd_file.filename)
 
+    with open(resume_path, "wb") as f:
+        f.write(await resume_file.read())
+
+    with open(jd_path, "wb") as f:
+        f.write(await jd_file.read())
+
+    resume_text = parse_resume(resume_path)
+    jd_text = parse_jd(jd_path)
+
+    experience_result = calculate_experience_score(resume_text, jd_text)
+
+    return {
+        "experience_analysis": experience_result
+    }
+
+
+# -----------------------------
+# Project Relevance Analysis API
+# -----------------------------
+@app.post("/analyze-projects")
+async def analyze_projects(
+    resume_file: UploadFile = File(...),
+    jd_file: UploadFile = File(...),
+):
+    resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+    jd_path = os.path.join(UPLOAD_DIR, jd_file.filename)
+
+    with open(resume_path, "wb") as f:
+        f.write(await resume_file.read())
+
+    with open(jd_path, "wb") as f:
+        f.write(await jd_file.read())
+
+    resume_text = parse_resume(resume_path)
+    jd_text = parse_jd(jd_path)
+
+    resume_skills = extract_skills(resume_text)
+    jd_skills = extract_skills(jd_text)
+
+    project_result = calculate_project_relevance_score(
+        resume_text=resume_text,
+        jd_skills=jd_skills,
+        known_skills=resume_skills,
+    )
+
+    return {
+        "project_analysis": project_result
+    }
