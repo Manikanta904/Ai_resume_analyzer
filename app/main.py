@@ -16,6 +16,10 @@ from app.analysis.experience_analyzer import calculate_experience_score
 from app.analysis.project_analyzer import calculate_project_relevance_score
 from app.analysis.ats_checker import calculate_ats_format_score
 from app.analysis.final_scorer import calculate_final_ats_score
+from app.role_intelligence.role_detector import (
+    detect_role,
+    calculate_role_relevance_score,
+)
 
 # ✅ ONE app only
 app = FastAPI(title="AI Resume Analyzer Backend")
@@ -345,4 +349,39 @@ async def analyze_full_resume(
         "experience_analysis": experience_result,
         "project_analysis": project_result,
         "ats_format_analysis": ats_format_result,
+    }
+
+
+# -----------------------------
+# Role Intelligence API
+# -----------------------------
+@app.post("/analyze-role")
+async def analyze_role(
+    resume_file: UploadFile = File(...),
+    jd_file: UploadFile = File(...),
+):
+    resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+    jd_path = os.path.join(UPLOAD_DIR, jd_file.filename)
+
+    with open(resume_path, "wb") as f:
+        f.write(await resume_file.read())
+
+    with open(jd_path, "wb") as f:
+        f.write(await jd_file.read())
+
+    resume_text = parse_resume(resume_path)
+    jd_text = parse_jd(jd_path)
+
+    resume_skills = extract_skills(resume_text)
+    jd_skills = extract_skills(jd_text)
+
+    detected_role = detect_role(jd_skills)
+
+    role_result = calculate_role_relevance_score(
+        resume_skills=resume_skills,
+        detected_role=detected_role,
+    )
+
+    return {
+        "role_analysis": role_result
     }
