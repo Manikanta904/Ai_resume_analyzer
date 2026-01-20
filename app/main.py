@@ -8,6 +8,8 @@ from app.skills.skill_extractor import extract_skills
 from app.matching.semantic_matcher import semantic_match
 from app.matching.jd_skill_classifier import classify_jd_skills
 from app.matching.skill_matcher import match_skills
+from app.skills.skill_list import SKILL_LIST
+
 from app.matching.weighted_scorer import calculate_ats_score
 from app.matching.explainability import explain_score
 
@@ -20,6 +22,12 @@ from app.role_intelligence.role_detector import (
     detect_role,
     calculate_role_relevance_score,
 )
+
+from app.ai_engine.skill_fallback import (
+    detect_unknown_skills,
+    classify_unknown_skills,
+)
+
 
 # ✅ ONE app only
 app = FastAPI(title="AI Resume Analyzer Backend")
@@ -124,6 +132,16 @@ async def analyze(
     # ---------- 3. Extract skills ----------
     resume_skills = extract_skills(resume_text)
     jd_skills = extract_skills(jd_text)
+
+        # ---------- AI Fallback Skill Detection ----------
+    unknown_resume_skills = detect_unknown_skills(resume_skills, jd_skills)
+    ai_classified_skills = classify_unknown_skills(unknown_resume_skills)
+
+    # Merge AI-detected skills
+    for skill in ai_classified_skills.keys():
+        if skill not in resume_skills:
+            resume_skills.append(skill)
+
 
     #DAY 9: Edge case handling ----------
     # Edge case handling
@@ -384,4 +402,38 @@ async def analyze_role(
 
     return {
         "role_analysis": role_result
+    }
+
+# -----------------------------
+# Dynamic Skill Intelligence API
+# -----------------------------
+@app.post("/analyze-dynamic-skills")
+async def analyze_dynamic_skills(
+    resume_file: UploadFile = File(...),
+):
+    resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+
+    with open(resume_path, "wb") as f:
+        f.write(await resume_file.read())
+
+    resume_text = parse_resume(resume_path)
+
+    extracted_skills = extract_skills(resume_text)
+
+    # Known skill taxonomy
+    from app.skills.skill_list import SKILL_LIST
+
+    # Detect unknown skills
+    unknown_skills = detect_unknown_skills(
+        extracted_skills=extracted_skills,
+        known_skills=SKILL_LIST,
+    )
+
+    # Classify unknown skills using AI
+    classified_skills = classify_unknown_skills(unknown_skills)
+
+    return {
+        "extracted_skills": extracted_skills,
+        "unknown_skills": unknown_skills,
+        "ai_detected_skills": classified_skills,
     }

@@ -1,5 +1,5 @@
 import re
-from app.skills.skill_list import SKILLS
+from app.skills.skill_list import SKILL_LIST as SKILLS
 from app.skills.skill_aliases import SKILL_ALIASES
 from app.skills.skill_normalizer import normalize_skill
 
