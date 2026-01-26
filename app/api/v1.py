@@ -26,6 +26,16 @@ from app.role_intelligence.role_detector import (
     calculate_role_relevance_score,
 )
 
+from app.versioning.resume_versions import (
+    generate_resume_id,
+    save_resume_version,
+)
+
+from typing import List
+from fastapi import UploadFile, File
+
+from app.recruiter.multi_jd import compare_resume_with_multiple_jds
+from app.recruiter.ranking_engine import rank_resumes_against_jd
 UPLOAD_DIR = "uploads"
 
 router = APIRouter(prefix="/api/v1", tags=["Product APIs"])
@@ -199,3 +209,101 @@ async def analyze_resume(
         "ats_format": ats_format_result,
         "role": role_result,
     }
+
+    # ---------------- Resume Versioning ----------------
+    resume_id = generate_resume_id()
+    saved_version = save_resume_version(
+        resume_id=resume_id,
+        ats_score=final_score["final_ats_score"],
+        role=role_result["role"],
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+    )
+    return {
+        "resume_id": resume_id,
+        "version": saved_version["version"],
+        "final_ats": final_score,
+        "skills": {...},
+        "experience": experience_result,
+        "projects": project_result,
+        "ats_format": ats_format_result,
+        "role": role_result,
+    }
+
+
+    from app.versioning.resume_versions import get_resume_versions
+
+      
+    @router.get("/resume/{resume_id}/versions")
+    def get_versions(resume_id: str):
+        """
+        Fetch all ATS score versions for a resume.
+        """
+        return get_resume_versions(resume_id)
+
+
+@router.post("/analyze-multi-jd")
+async def analyze_multi_jd(
+    resume_file: UploadFile = File(...),
+    jd_files: List[UploadFile] = File(...),
+):
+    """
+    Compare one resume against multiple job descriptions.
+    """
+
+    # Save resume
+    resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+    with open(resume_path, "wb") as f:
+        f.write(await resume_file.read())
+
+    resume_text = parse_resume(resume_path)
+
+    # Parse all JDs
+    jd_texts = []
+    for jd_file in jd_files:
+        jd_path = os.path.join(UPLOAD_DIR, jd_file.filename)
+        with open(jd_path, "wb") as f:
+            f.write(await jd_file.read())
+
+        jd_texts.append({
+            "name": jd_file.filename,
+            "text": parse_jd(jd_path),
+        })
+
+    return compare_resume_with_multiple_jds(
+        resume_text=resume_text,
+        jd_texts=jd_texts,
+    )
+
+@router.post("/recruiter/rank-resumes")
+async def rank_resumes(
+    jd_file: UploadFile = File(...),
+    resume_files: List[UploadFile] = File(...),
+):
+    """
+    Recruiter API to rank multiple resumes against one JD.
+    """
+
+    # Parse JD
+    jd_path = os.path.join(UPLOAD_DIR, jd_file.filename)
+    with open(jd_path, "wb") as f:
+        f.write(await jd_file.read())
+
+    jd_text = parse_jd(jd_path)
+
+    # Parse resumes
+    resumes = []
+    for resume_file in resume_files:
+        resume_path = os.path.join(UPLOAD_DIR, resume_file.filename)
+        with open(resume_path, "wb") as f:
+            f.write(await resume_file.read())
+
+        resumes.append({
+            "name": resume_file.filename,
+            "text": parse_resume(resume_path),
+        })
+
+    return rank_resumes_against_jd(
+        resumes=resumes,
+        jd_text=jd_text,
+    )

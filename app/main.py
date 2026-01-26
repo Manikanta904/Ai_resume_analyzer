@@ -8,8 +8,6 @@ from app.skills.skill_extractor import extract_skills
 from app.matching.semantic_matcher import semantic_match
 from app.matching.jd_skill_classifier import classify_jd_skills
 from app.matching.skill_matcher import match_skills
-from app.skills.skill_list import SKILL_LIST
-
 from app.matching.weighted_scorer import calculate_ats_score
 from app.matching.explainability import explain_score
 
@@ -28,10 +26,11 @@ from app.ai_engine.skill_fallback import (
     classify_unknown_skills,
 )
 
+from app.api.v1 import router as v1_router
 
 # ✅ ONE app only
 app = FastAPI(title="AI Resume Analyzer Backend")
-
+app.include_router(v1_router)
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
