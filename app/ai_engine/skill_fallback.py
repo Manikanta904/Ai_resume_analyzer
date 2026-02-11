@@ -55,7 +55,7 @@ def classify_unknown_skills(unknown_skills: List[str]) -> Dict[str, str]:
     )
 
     response = client.models.generate_content(
-        model="models/gemini-flash-latest",
+        model="models/gemini-2.5-flash",
         contents=prompt,
     )
 

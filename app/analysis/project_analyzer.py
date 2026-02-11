@@ -8,8 +8,10 @@ Extracts project section from resume and evaluates relevance against JD skills.
 import re
 from typing import Dict, List
 
+from app.skills.skill_extractor import extract_skills
 
-def extract_project_section(resume_text: str) -> str:
+
+def analyze_projects(resume_text: str) -> str:
     """
     Extract Projects section from resume.
     """
@@ -51,7 +53,7 @@ def calculate_project_relevance_score(
     """
     Calculate project relevance score between resume and JD.
     """
-    project_section = extract_project_section(resume_text)
+    project_section = analyze_projects(resume_text)
 
     if not project_section:
         return {
@@ -81,3 +83,31 @@ def calculate_project_relevance_score(
         "status": "Projects relevant to job role",
         "matched_project_skills": matched_skills,
     }
+# app/analysis/project_analyzer.py
+
+from typing import Dict
+
+def analyze_projects_core(
+    resume_text: str,
+    resume_skills: list,
+    jd_skills: list,
+) -> dict:
+    """
+    Core project relevance analyzer (logic-only, no FastAPI)
+    """
+
+    score = 0
+
+    for skill in jd_skills:
+        if skill in resume_text.lower():
+            score += 1
+
+    max_score = max(len(jd_skills), 1)
+    project_score = int((score / max_score) * 100)
+
+    return {
+        "project_score": project_score,
+        "matched_project_skills": score,
+        "status": "calculated",
+    }
+

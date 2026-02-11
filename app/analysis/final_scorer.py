@@ -39,13 +39,14 @@ def calculate_final_ats_score(
     final_score = round(final_score)
 
     return {
-        "final_ats_score": final_score,
-        "breakdown": {
-            "skill_score": skill_score,
-            "experience_score": experience_score,
-            "project_score": project_score,
-            "ats_format_score": ats_format_score,
-            "role_score": role_score,
-        },
-        "weights": WEIGHTS,
-    }
+    "ats_score": final_score,
+    "breakdown": {
+        "skill_score": skill_score,
+        "experience_score": experience_score,
+        "project_score": project_score,
+        "ats_format_score": ats_format_score,
+        "role_score": role_score,
+    },
+    "weights": WEIGHTS,
+}
+

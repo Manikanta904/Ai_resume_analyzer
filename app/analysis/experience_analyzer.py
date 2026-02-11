@@ -107,36 +107,29 @@ def extract_required_years(jd_text: str) -> float:
 
     return 0.0
 
-
-def calculate_experience_score(resume_text: str, jd_text: str) -> Dict[str, object]:
-    """
-    Calculate experience relevance score between resume and JD.
-    """
+def calculate_experience_score(resume_text: str, jd_text: str) -> dict:
     resume_years = extract_experience_years(resume_text)
     required_years = extract_required_years(jd_text)
 
-    # Fresher role
-    if required_years == 0:
-        return {
-            "resume_years": resume_years,
-            "required_years": 0,
-            "experience_score": 100,
-            "status": "Fresher role or no experience required",
-        }
-
-    if resume_years >= required_years:
-        return {
-            "resume_years": resume_years,
-            "required_years": required_years,
-            "experience_score": 100,
-            "status": "Meets experience requirement",
-        }
-
-    score = int((resume_years / required_years) * 100)
-
-    return {
+    # Default response (SAFE)
+    response = {
         "resume_years": resume_years,
         "required_years": required_years,
-        "experience_score": score,
-        "status": "Below experience requirement",
+        "experience_score": 0,
+        "status": "Unknown",
     }
+
+    if required_years == 0:
+        response["experience_score"] = 100
+        response["status"] = "Fresher role or no experience required"
+        return response
+
+    if resume_years >= required_years:
+        response["experience_score"] = 100
+        response["status"] = "Meets experience requirement"
+        return response
+
+    response["experience_score"] = int((resume_years / required_years) * 100)
+    response["status"] = "Below experience requirement"
+    return response
+
