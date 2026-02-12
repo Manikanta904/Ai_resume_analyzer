@@ -1,4 +1,4 @@
-SKILLS = [
+SKILL_LIST = [
     # Programming Languages
     "python", "java", "c", "c++",
 
@@ -17,7 +17,7 @@ SKILLS = [
     "docker", "kubernetes",
 
     # Tools
-    "git", "github",
+    #"git", "github",
 
     # APIs
     "rest api", "graphql",

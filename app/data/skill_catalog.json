@@ -1,0 +1,17 @@
+{
+  "default": {
+    "learning_path": [
+      "Understand fundamentals",
+      "Practice intermediate concepts",
+      "Apply advanced use cases"
+    ],
+    "project_ideas": [
+      "Build a small hands-on project",
+      "Apply skill in a real-world scenario"
+    ],
+    "certifications": [
+      "Beginner certification",
+      "Advanced professional certification"
+    ]
+  }
+}
