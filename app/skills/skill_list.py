@@ -17,7 +17,7 @@ SKILL_LIST = [
     "docker", "kubernetes",
 
     # Tools
-    #"git", "github",
+    "git", "github",
 
     # APIs
     "rest api", "graphql",

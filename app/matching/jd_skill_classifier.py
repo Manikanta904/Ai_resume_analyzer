@@ -19,7 +19,7 @@ def classify_jd_skills(jd_text: str, jd_skills: list[str]) -> dict:
         elif skill in good_section:
             good_to_have.append(skill)
         else:
-            good_to_have.append(skill)  # ✅ safer fallback
+            good_to_have.append(skill)  
 
     return {
         "must_have": list(set(must_have)),
