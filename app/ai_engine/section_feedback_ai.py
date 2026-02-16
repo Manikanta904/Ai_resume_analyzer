@@ -2,12 +2,12 @@
 
 import os
 import json
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 from google import genai
 
 from app.ai_engine.prompts import SECTION_FEEDBACK_PROMPT
 
-load_dotenv()
+#load_dotenv()
 
 # Gemini client (same as skill_fallback.py)
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))

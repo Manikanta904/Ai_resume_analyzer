@@ -1,5 +1,3 @@
-def normalize_skill(skill: str) -> str:
-    return skill.lower().strip()
 SKILL_NORMALIZATION_MAP = {
     "gen ai": "generative ai",
     "ml": "machine learning",
@@ -10,4 +8,5 @@ SKILL_NORMALIZATION_MAP = {
 }
 
 def normalize_skill(skill: str) -> str:
+    skill = skill.lower().strip()
     return SKILL_NORMALIZATION_MAP.get(skill, skill)

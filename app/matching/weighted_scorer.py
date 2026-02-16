@@ -17,7 +17,7 @@ def calculate_ats_score(
 
     ats_score = round((score / max_score) * 100)
 
-    # ✅ DAY 9: Cap perfect score
+    
     ats_score = min(ats_score, 95)
 
     return ats_score
