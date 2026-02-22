@@ -83,3 +83,8 @@ logs/
 # OS files
 Thumbs.db
 .DS_Store
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
